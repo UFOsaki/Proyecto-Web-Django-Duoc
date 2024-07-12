@@ -55,6 +55,9 @@ document.addEventListener("DOMContentLoaded", function() {
     form.addEventListener("submit", (e) => {
         if (!validateFormStep(steps[currentStep])) {
             e.preventDefault();
+        } else {
+            // Redirigir después de enviar el formulario
+            window.location.href = "{% url 'autenticacion_login' %}";
         }
     });
 
@@ -90,5 +93,6 @@ export const finalizeRegistration = () => {
     const form = document.getElementById("signup-form");
     if (validateFormStep(steps[currentStep])) {
         form.submit();
+        window.location.href = "{% url 'autenticacion_login' %}";
     }
 };
