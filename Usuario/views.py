@@ -1,56 +1,47 @@
+# Usuario/views.py
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate
-from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth.models import User
 from django.http import JsonResponse
-from .forms import UserRegisterForm
-import json
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth import authenticate, login
+from .models import Usuario
+from .forms import UsuarioForm
+from django.contrib.auth import views as auth_views
 
-def register(request):
+
+def usuario_create(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
-        email = data.get('email')
-        if User.objects.filter(email=email).exists():
-            return JsonResponse({'success': False, 'error': 'El correo electrónico ya está registrado.'})
-        form = UserRegisterForm(data)
+        form = UsuarioForm(request.POST)
         if form.is_valid():
-            form.save()
-            return JsonResponse({'success': True})
+            user = form.save(commit=False)
+            user.password = make_password(form.cleaned_data['password'])
+            user.save()
+            return redirect('login')  # Redirige a la URL de inicio de sesión después de crear el usuario
         else:
-            return JsonResponse({'success': False, 'error': form.errors})
+            return JsonResponse({'errors': form.errors}, status=400)
     else:
-        form = UserRegisterForm()
-    return render(request, 'Usuario/register.html', {'form': form})
+        form = UsuarioForm()
+        return render(request, 'Usuario/register.html', {'form': form})
+
 
 def login_view(request):
     if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
+        form = LoginForm(request.POST)
         if form.is_valid():
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
+            user = authenticate(request, username=username, password=password)
             if user is not None:
                 login(request, user)
-                return redirect('index')
+                return redirect('index')  # Redirige a la página principal o a donde desees
+            else:
+                form.add_error(None, 'Nombre de usuario o contraseña incorrectos.')
     else:
-        form = AuthenticationForm()
+        form = LoginForm()
     return render(request, 'Usuario/login.html', {'form': form})
 
-def get_users(request):
-    users = list(User.objects.values('username', 'email'))
-    return JsonResponse(users, safe=False)
-
-
-def register_view(request):
-    if request.method == 'POST':
-        form = UserRegisterForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return JsonResponse({'success': True})
-        else:
-            # Convierte los errores del formulario a un diccionario simple
-            errors = form.errors.as_json()
-            return JsonResponse({'success': False, 'errors': errors}, status=400)
-    else:
-        form = UserRegisterForm()
-    return render(request, 'register.html', {'form': form})
+def verificar_email(request):
+    email = request.GET.get('email', None)
+    data = {
+        'is_taken': Usuario.objects.filter(email__iexact=email).exists()
+    }
+    return JsonResponse(data)

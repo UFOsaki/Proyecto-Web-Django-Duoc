@@ -36,7 +36,43 @@ export const populateRegionCodes = () => {
 
 // Función para rellenar el campo select de países
 export const populateCountryData = () => {
-    populateSelect("country", data.countries);
+    const countryOptions = data.countries.map(country => ({ name: country.name, code: country.code }));
+    populateSelect("country", countryOptions);
+};
+
+// Función para rellenar el campo select de regiones basado en el país seleccionado
+export const populateRegions = (countryCode) => {
+    const country = data.countries.find(c => c.code === countryCode);
+    if (country) {
+        const regionOptions = country.regions.map(region => ({ name: region.name, code: region.code }));
+        populateSelect("region", regionOptions);
+    }
+};
+
+// Función para rellenar el campo select de ciudades basado en la región seleccionada
+export const populateCities = (countryCode, regionCode) => {
+    const country = data.countries.find(c => c.code === countryCode);
+    if (country) {
+        const region = country.regions.find(r => r.code === regionCode);
+        if (region) {
+            const cityOptions = region.cities.map(city => ({ name: city.name, code: city.code }));
+            populateSelect("city", cityOptions);
+        }
+    }
+};
+
+// Función para rellenar el campo select de comunas basado en la ciudad seleccionada
+export const populateCommunes = (countryCode, regionCode, cityCode) => {
+    const country = data.countries.find(c => c.code === countryCode);
+    if (country) {
+        const region = country.regions.find(r => r.code === regionCode);
+        if (region) {
+            const city = region.cities.find(c => c.code === cityCode);
+            if (city) {
+                populateSelect("commune", city.communes, false);
+            }
+        }
+    }
 };
 
 // Al cargar el DOM, rellena los campos select correspondientes
@@ -44,59 +80,3 @@ document.addEventListener("DOMContentLoaded", () => {
     populateRegionCodes();
     populateCountryData();
 });
-
-// Maneja el cambio en el select de países para actualizar las regiones
-const handleCountryChange = () => {
-    const countryCode = document.getElementById("country").value;
-    const country = data.countries.find(c => c.code === countryCode);
-    if (country) {
-        populateSelect("region", country.regions);
-        document.getElementById("region").disabled = false;
-    } else {
-        populateSelect("region", []);
-        document.getElementById("region").disabled = true;
-    }
-    populateSelect("city", []);
-    document.getElementById("city").disabled = true;
-    populateSelect("commune", []);
-    document.getElementById("commune").disabled = true;
-};
-
-// Maneja el cambio en el select de regiones para actualizar las ciudades
-const handleRegionChange = () => {
-    const countryCode = document.getElementById("country").value;
-    const regionCode = document.getElementById("region").value;
-    const country = data.countries.find(c => c.code === countryCode);
-    const region = country ? country.regions.find(r => r.code === regionCode) : null;
-    if (region) {
-        populateSelect("city", region.cities);
-        document.getElementById("city").disabled = false;
-    } else {
-        populateSelect("city", []);
-        document.getElementById("city").disabled = true;
-    }
-    populateSelect("commune", []);
-    document.getElementById("commune").disabled = true;
-};
-
-// Maneja el cambio en el select de ciudades para actualizar las comunas
-const handleCityChange = () => {
-    const countryCode = document.getElementById("country").value;
-    const regionCode = document.getElementById("region").value;
-    const cityCode = document.getElementById("city").value;
-    const country = data.countries.find(c => c.code === countryCode);
-    const region = country ? country.regions.find(r => r.code === regionCode) : null;
-    const city = region ? region.cities.find(c => c.code === cityCode) : null;
-    if (city) {
-        populateSelect("commune", city.communes.map(c => ({ name: c })));
-        document.getElementById("commune").disabled = false;
-    } else {
-        populateSelect("commune", []);
-        document.getElementById("commune").disabled = true;
-    }
-};
-
-// Asigna eventos para manejar cambios en los selects
-document.getElementById("country").addEventListener("change", handleCountryChange);
-document.getElementById("region").addEventListener("change", handleRegionChange);
-document.getElementById("city").addEventListener("change", handleCityChange);

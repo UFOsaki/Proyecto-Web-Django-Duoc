@@ -1,31 +1,19 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
 
-class CustomUser(AbstractUser):
-    email = models.EmailField(unique=True)
-    phone = models.CharField(max_length=20, blank=True)
-    region_code = models.CharField(max_length=10, blank=True)
-    country = models.CharField(max_length=50, blank=True)
-    region = models.CharField(max_length=50, blank=True)
-    city = models.CharField(max_length=50, blank=True)
-    commune = models.CharField(max_length=50, blank=True)
-    street = models.CharField(max_length=100, blank=True)
-    street_number = models.CharField(max_length=10, blank=True)
-    apartment_number = models.CharField(max_length=10, blank=True)
-    comments = models.TextField(blank=True)
+class Usuario(models.Model):
+    email = models.EmailField(unique=True, null=False)
+    password = models.CharField(max_length=50, null=False)
+    username = models.CharField(max_length=50, null=False)
+    name = models.CharField(max_length=50, null=False)
+    lastname = models.CharField(max_length=50, null=False)
+    phone_number = models.CharField(max_length=50, null=False)
+    region_code = models.CharField(max_length=5, null=False)
+    city = models.CharField(max_length=50, null=False)
+    commune = models.CharField(max_length=50, null=False)
+    street = models.CharField(max_length=50, null=False)
+    street_number = models.IntegerField(null=False)
+    apartment_number = models.IntegerField(null=True, blank=True)
+    comments = models.CharField(max_length=100, null=True, blank=True)
 
-    # Añadir related_name para evitar conflictos
-    groups = models.ManyToManyField(
-        'auth.Group',
-        related_name='customuser_set',  # Nombre alternativo para el acceso reverso
-        blank=True,
-        help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.',
-        verbose_name='groups'
-    )
-    user_permissions = models.ManyToManyField(
-        'auth.Permission',
-        related_name='customuser_set',  # Nombre alternativo para el acceso reverso
-        blank=True,
-        help_text='Specific permissions for this user.',
-        verbose_name='user permissions'
-    )
+    def __str__(self):
+        return self.email
